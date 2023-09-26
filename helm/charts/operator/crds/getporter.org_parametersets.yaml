@@ -1,42 +1,23 @@
+---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.8.0
-  creationTimestamp: null
-  name: installations.getporter.org
+    controller-gen.kubebuilder.io/version: v0.12.1
+  name: parametersets.getporter.org
 spec:
   group: getporter.org
   names:
-    kind: Installation
-    listKind: InstallationList
-    plural: installations
-    singular: installation
+    kind: ParameterSet
+    listKind: ParameterSetList
+    plural: parametersets
+    singular: parameterset
   scope: Namespaced
   versions:
-  - additionalPrinterColumns:
-    - jsonPath: .metadata.Namespace
-      name: Namespace
-      type: string
-    - jsonPath: .spec.Namespace
-      name: Porter Namespace
-      type: string
-    - jsonPath: .spec.Name
-      name: Name
-      type: string
-    - jsonPath: .status.PorterResourceStatus.Action
-      name: Last Action
-      type: string
-    - jsonPath: .status.PorterResourceStatus.Phase
-      name: Last Status
-      type: string
-    - jsonPath: .metadata.creationTimestamp
-      name: Age
-      type: date
-    name: v1
+  - name: v1
     schema:
       openAPIV3Schema:
-        description: Installation is the Schema for the installations API
+        description: ParameterSet is the Schema for the parametersets API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -51,10 +32,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: "InstallationSpec defines the desired state of Installation
-              \n SERIALIZATION NOTE: * The json serialization is for persisting this
-              to Kubernetes. * The yaml serialization is for creating a Porter representation
-              of the resource."
+            description: ParameterSetSpec defines the desired state of ParameterSet
             properties:
               agentConfig:
                 description: AgentConfig is the name of an AgentConfig to use instead
@@ -65,68 +43,53 @@ spec:
                       TODO: Add other useful fields. apiVersion, kind, uid?'
                     type: string
                 type: object
-              bundle:
-                description: Bundle definition for the installation.
-                properties:
-                  digest:
-                    description: Digest is the current digest of the bundle.
-                    type: string
-                  repository:
-                    description: Repository is the OCI repository of the current bundle
-                      definition.
-                    type: string
-                  tag:
-                    description: Tag is the OCI tag of the current bundle definition.
-                    type: string
-                  version:
-                    description: Version is the current version of the bundle.
-                    type: string
-                required:
-                - repository
-                type: object
-              credentialSets:
-                description: CredentialSets that should be included when the bundle
-                  is reconciled.
-                items:
-                  type: string
-                type: array
-              labels:
-                additionalProperties:
-                  type: string
-                description: Labels applied to the installation.
-                type: object
+                x-kubernetes-map-type: atomic
               name:
-                description: Name is the name of the installation in Porter. Immutable.
+                description: Name is the name of the parameter set in Porter. Immutable.
                 type: string
               namespace:
-                description: Namespace (in Porter) where the installation is defined.
+                description: Namespace (in Porter) where the parameter set is defined.
                 type: string
-              parameterSets:
-                description: ParameterSets that should be included when the bundle
-                  is reconciled.
-                items:
-                  type: string
-                type: array
               parameters:
-                description: Parameters specified by the user through overrides. Does
-                  not include defaults, or values resolved from parameter sources.
-                type: object
-                x-kubernetes-preserve-unknown-fields: true
+                description: Parameters list of bundle parameters in the parameter
+                  set.
+                items:
+                  description: Parameter defines an element in a ParameterSet
+                  properties:
+                    name:
+                      description: Name is the bundle parameter name
+                      type: string
+                    source:
+                      description: 'Source is the bundle parameter source supported:
+                        secret, value unsupported: file path(via configMap), env var,
+                        shell cmd'
+                      properties:
+                        secret:
+                          description: Secret is a parameter source using a secret
+                            plugin
+                          type: string
+                        value:
+                          description: Value is a paremeter source using plaintext
+                            value
+                          type: string
+                      type: object
+                  required:
+                  - name
+                  - source
+                  type: object
+                type: array
               schemaVersion:
-                description: SchemaVersion is the version of the installation state
+                description: SchemaVersion is the version of the parameter set state
                   schema.
                 type: string
-              uninstalled:
-                description: Uninstalled specifies if the installation should be uninstalled.
-                type: boolean
             required:
-            - bundle
             - name
             - namespace
+            - parameters
             - schemaVersion
             type: object
           status:
-            description: InstallationStatus defines the observed state of Installation
+            description: ParameterSetStatus defines the observed state of ParameterSet
             properties:
               action:
                 description: The most recent action executed for the resource
@@ -136,6 +99,7 @@ spec:
                       TODO: Add other useful fields. apiVersion, kind, uid?'
                     type: string
                 type: object
+                x-kubernetes-map-type: atomic
               conditions:
                 description: 'Conditions store a list of states that have been reached.
                   Each condition refers to the status of the ActiveJob Possible conditions
@@ -221,9 +185,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []

@@ -1,23 +1,39 @@
+---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.8.0
-  creationTimestamp: null
-  name: agentconfigs.getporter.org
+    controller-gen.kubebuilder.io/version: v0.12.1
+  name: installations.getporter.org
 spec:
   group: getporter.org
   names:
-    kind: AgentConfig
-    listKind: AgentConfigList
-    plural: agentconfigs
-    singular: agentconfig
+    kind: Installation
+    listKind: InstallationList
+    plural: installations
+    singular: installation
   scope: Namespaced
   versions:
-  - name: v1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.name
+      name: Porter Name
+      type: string
+    - jsonPath: .spec.namespace
+      name: Porter Namespace
+      type: string
+    - jsonPath: .status.action.name
+      name: Last Action
+      type: string
+    - jsonPath: .status.phase
+      name: Last Status
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1
     schema:
       openAPIV3Schema:
-        description: AgentConfig is the Schema for the agentconfigs API
+        description: Installation is the Schema for the installations API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -32,86 +48,83 @@ spec:
           metadata:
             type: object
           spec:
-            description: "AgentConfigSpec defines the configuration for the Porter
-              agent. \n SERIALIZATION NOTE: \n The json serialization is for persisting
-              this to Kubernetes. The mapstructure tags is used internally for AgentConfigSpec.MergeConfig."
+            description: "InstallationSpec defines the desired state of Installation
+              \n SERIALIZATION NOTE: * The json serialization is for persisting this
+              to Kubernetes. * The yaml serialization is for creating a Porter representation
+              of the resource."
             properties:
-              installationServiceAccount:
-                description: InstallationServiceAccount specifies a service account
-                  to run the Kubernetes pod/job for the installation image. The default
-                  is to run without a service account. This can be useful for a bundle
-                  which is targeting the kubernetes cluster that the operator is installed
-                  in.
-                type: string
-              pluginConfigFile:
-                description: PluginConfigFile specifies plugins required to run Porter
-                  bundles. In order to utilize mapstructure omitempty tag with an
-                  embedded struct, this field needs to be a pointer
+              agentConfig:
+                description: AgentConfig is the name of an AgentConfig to use instead
+                  of the AgentConfig defined at the namespace or system level.
                 properties:
-                  plugins:
-                    additionalProperties:
-                      description: Plugin represents the plugin configuration.
-                      properties:
-                        feedURL:
-                          type: string
-                        mirror:
-                          type: string
-                        url:
-                          type: string
-                        version:
-                          type: string
-                      type: object
-                    description: Plugins is a map of plugin configuration using plugin
-                      name as the key.
-                    type: object
-                  schemaVersion:
-                    description: SchemaVersion is the version of the plugins configuration
-                      state schema.
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
+              bundle:
+                description: Bundle definition for the installation.
+                properties:
+                  digest:
+                    description: Digest is the current digest of the bundle.
+                    type: string
+                  repository:
+                    description: Repository is the OCI repository of the current bundle
+                      definition.
+                    type: string
+                  tag:
+                    description: Tag is the OCI tag of the current bundle definition.
+                    type: string
+                  version:
+                    description: Version is the current version of the bundle.
                     type: string
                 required:
-                - schemaVersion
+                - repository
                 type: object
-              porterRepository:
-                description: PorterRepository is the repository for the Porter Agent
-                  image. Defaults to ghcr.io/getporter/porter-agent
+              credentialSets:
+                description: CredentialSets that should be included when the bundle
+                  is reconciled.
+                items:
+                  type: string
+                type: array
+              labels:
+                additionalProperties:
+                  type: string
+                description: Labels applied to the installation.
+                type: object
+              name:
+                description: Name is the name of the installation in Porter. Immutable.
                 type: string
-              porterVersion:
-                description: PorterVersion is the tag for the Porter Agent image.
-                  Defaults to a well-known version of the agent that has been tested
-                  with the operator. Users SHOULD override this to use more recent
-                  versions.
+              namespace:
+                description: Namespace (in Porter) where the installation is defined.
                 type: string
-              pullPolicy:
-                description: PullPolicy specifies when to pull the Porter Agent image.
-                  The default is to use PullAlways when the tag is canary or latest,
-                  and PullIfNotPresent otherwise.
+              parameterSets:
+                description: ParameterSets that should be included when the bundle
+                  is reconciled.
+                items:
+                  type: string
+                type: array
+              parameters:
+                description: Parameters specified by the user through overrides. Does
+                  not include defaults, or values resolved from parameter sources.
+                type: object
+                x-kubernetes-preserve-unknown-fields: true
+              schemaVersion:
+                description: SchemaVersion is the version of the installation state
+                  schema.
                 type: string
-              retryLimit:
-                description: RetryLimit specifies the maximum number of retries that
-                  a failed agent job will run before being marked as failure. The
-                  default is set to 6 the same as the `BackoffLimit` on a kubernetes
-                  job.
-                format: int32
-                type: integer
-              serviceAccount:
-                description: ServiceAccount is the service account to run the Porter
-                  Agent under.
-                type: string
-              storageClassName:
-                description: StorageClassName is the name of the storage class that
-                  Porter will request when running the Porter Agent. It is used to
-                  determine what the storage class will be for the volume requested
-                type: string
-              volumeSize:
-                description: VolumeSize is the size of the persistent volume that
-                  Porter will request when running the Porter Agent. It is used to
-                  share data between the Porter Agent and the bundle invocation image.
-                  It must be large enough to store any files used by the bundle including
-                  credentials, parameters and outputs.
-                type: string
+              uninstalled:
+                description: Uninstalled specifies if the installation should be uninstalled.
+                type: boolean
+            required:
+            - bundle
+            - name
+            - namespace
+            - schemaVersion
             type: object
           status:
-            description: AgentConfigStatus defines the observed state of AgentConfig
+            description: InstallationStatus defines the observed state of Installation
             properties:
               action:
                 description: The most recent action executed for the resource
@@ -121,6 +134,7 @@ spec:
                       TODO: Add other useful fields. apiVersion, kind, uid?'
                     type: string
                 type: object
+                x-kubernetes-map-type: atomic
               conditions:
                 description: 'Conditions store a list of states that have been reached.
                   Each condition refers to the status of the ActiveJob Possible conditions
@@ -200,22 +214,9 @@ spec:
                 description: 'The current status of the agent. Possible values are:
                   Unknown, Pending, Running, Succeeded, and Failed.'
                 type: string
-              ready:
-                default: false
-                description: The current status of whether the AgentConfig is ready
-                  to be used for an AgentAction.
-                type: boolean
-            required:
-            - ready
             type: object
         type: object
     served: true
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
