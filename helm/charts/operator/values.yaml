@@ -6,10 +6,10 @@
 # corresponding CRD yaml in the cart (and so no CRD in the k8s
 # repository).
 images:
-  manager: portertest.azurecr.io/porter-operator-manager@sha256:f4d242064ddd04f6423175a071f9a9894e1efacddc3b2744cfe8eb11c092c09e
+  manager: ghcr.io/getporter/porter-operator:v1.0.0
   kubeRBACProxy: gcr.io/kubebuilder/kube-rbac-proxy:v0.5.0
 # Mongo DB
-# Set Mongo Db 
+# Set Mongo Db
 mongodb:
   enabled: true
   url: ""
