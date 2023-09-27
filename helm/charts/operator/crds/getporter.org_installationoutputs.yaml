@@ -1,23 +1,38 @@
+---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.8.0
-  creationTimestamp: null
-  name: credentialsets.getporter.org
+    controller-gen.kubebuilder.io/version: v0.12.1
+  name: installationoutputs.getporter.org
 spec:
   group: getporter.org
   names:
-    kind: CredentialSet
-    listKind: CredentialSetList
-    plural: credentialsets
-    singular: credentialset
+    kind: InstallationOutput
+    listKind: InstallationOutputList
+    plural: installationoutputs
+    singular: installationoutput
   scope: Namespaced
   versions:
-  - name: v1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.name
+      name: Porter Name
+      type: string
+    - jsonPath: .spec.namespace
+      name: Porter Namespace
+      type: string
+    - jsonPath: .status.phase
+      name: Phase
+      type: string
+    - jsonPath: .status.outputNames
+      name: Output Names
+      priority: 1
+      type: string
+    name: v1
     schema:
       openAPIV3Schema:
-        description: CredentialSet is the Schema for the credentialsets API
+        description: InstallationOutput is the Schema for the installationoutputs
+          API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -32,72 +47,17 @@ spec:
           metadata:
             type: object
           spec:
-            description: CredentialSetSpec defines the desired state of CredentialSet
+            description: InstallationOutputSpec defines the desired state of InstallationOutput
             properties:
-              agentConfig:
-                description: AgentConfig is the name of an AgentConfig to use instead
-                  of the AgentConfig defined at the namespace or system level.
-                properties:
-                  name:
-                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                      TODO: Add other useful fields. apiVersion, kind, uid?'
-                    type: string
-                type: object
-              credentials:
-                description: Credentials list of bundle credentials in the credential
-                  set.
-                items:
-                  description: Credential defines a element in a CredentialSet
-                  properties:
-                    name:
-                      description: Name is the bundle credential name
-                      type: string
-                    source:
-                      description: 'Source is the bundle credential source supported:
-                        secret unsupported: file path(via configMap), specific value,
-                        env var, shell cmd'
-                      properties:
-                        secret:
-                          description: Secret is a credential source using a secret
-                            plugin
-                          type: string
-                      type: object
-                  required:
-                  - name
-                  - source
-                  type: object
-                type: array
               name:
-                description: Name is the name of the credential set in Porter. Immutable.
                 type: string
               namespace:
-                description: Namespace (in Porter) where the credential set is defined.
                 type: string
-              schemaVersion:
-                description: SchemaVersion is the version of the credential set state
-                  schema.
-                type: string
-            required:
-            - credentials
-            - name
-            - namespace
-            - schemaVersion
             type: object
           status:
-            description: CredentialSetStatus defines the observed state of CredentialSet
+            description: InstallationOutputStatus defines the observed state of InstallationOutput
             properties:
-              action:
-                description: The most recent action executed for the resource
-                properties:
-                  name:
-                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                      TODO: Add other useful fields. apiVersion, kind, uid?'
-                    type: string
-                type: object
               conditions:
-                description: 'Conditions store a list of states that have been reached.
-                  Each condition refers to the status of the ActiveJob Possible conditions
-                  are: Scheduled, Started, Completed, and Failed'
                 items:
                   description: "Condition contains details for one aspect of the current
                     state of this API Resource. --- This struct is intended for direct
@@ -165,13 +125,29 @@ spec:
                   - type
                   type: object
                 type: array
-              observedGeneration:
-                description: The last generation observed by the controller.
-                format: int64
-                type: integer
+              outputNames:
+                type: string
+              outputs:
+                items:
+                  properties:
+                    name:
+                      type: string
+                    sensitive:
+                      type: boolean
+                    type:
+                      type: string
+                    value:
+                      type: string
+                  required:
+                  - name
+                  - sensitive
+                  - type
+                  - value
+                  type: object
+                type: array
               phase:
-                description: 'The current status of the agent. Possible values are:
-                  Unknown, Pending, Running, Succeeded, and Failed.'
+                description: AgentPhase are valid statuses of a Porter agent job that
+                  is managing a change to a Porter resource.
                 type: string
             type: object
         type: object
@@ -179,9 +155,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []

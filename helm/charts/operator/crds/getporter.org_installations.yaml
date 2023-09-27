@@ -1,9 +1,9 @@
+---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.8.0
-  creationTimestamp: null
+    controller-gen.kubebuilder.io/version: v0.12.1
   name: installations.getporter.org
 spec:
   group: getporter.org
@@ -15,19 +15,16 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .metadata.Namespace
-      name: Namespace
+    - jsonPath: .spec.name
+      name: Porter Name
       type: string
-    - jsonPath: .spec.Namespace
+    - jsonPath: .spec.namespace
       name: Porter Namespace
       type: string
-    - jsonPath: .spec.Name
-      name: Name
-      type: string
-    - jsonPath: .status.PorterResourceStatus.Action
+    - jsonPath: .status.action.name
       name: Last Action
       type: string
-    - jsonPath: .status.PorterResourceStatus.Phase
+    - jsonPath: .status.phase
       name: Last Status
       type: string
     - jsonPath: .metadata.creationTimestamp
@@ -65,6 +62,7 @@ spec:
                       TODO: Add other useful fields. apiVersion, kind, uid?'
                     type: string
                 type: object
+                x-kubernetes-map-type: atomic
               bundle:
                 description: Bundle definition for the installation.
                 properties:
@@ -136,6 +134,7 @@ spec:
                       TODO: Add other useful fields. apiVersion, kind, uid?'
                     type: string
                 type: object
+                x-kubernetes-map-type: atomic
               conditions:
                 description: 'Conditions store a list of states that have been reached.
                   Each condition refers to the status of the ActiveJob Possible conditions
@@ -221,9 +220,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []
