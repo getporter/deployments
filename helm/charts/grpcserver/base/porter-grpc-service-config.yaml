@@ -1,0 +1,14 @@
+apiVersion: v1
+data:
+  config: |
+    default-secrets-plugin: "kubernetes.secrets"
+    default-storage: "mongodb"
+    storage:
+      - name: "mongodb"
+        plugin: "mongodb"
+        config:
+          url: "mongodb://root:demopasswd@porter-operator-mongodb.{{.Release.Namespace }}.svc.cluster.local"
+kind: ConfigMap
+metadata:
+  name: porter-grpc-service-config
+  namespace: {{ .Release.Namespace }}

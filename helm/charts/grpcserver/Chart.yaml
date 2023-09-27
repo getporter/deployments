@@ -1,8 +1,8 @@
 apiVersion: v2
-name: porter-operator
+name: porter-grpc-server
 version: v0.0.1
 appVersion: v0.0.1
-description: Deploy components and dependencies of Porter Operator
+description: Deploy porter grpc server
 home: https://porter.sh
 sources:
   - https://github.com/getporter/operator

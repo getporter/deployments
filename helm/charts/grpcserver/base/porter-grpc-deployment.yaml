@@ -4,7 +4,7 @@ metadata:
   labels:
     app: porter-grpc-service
   name: porter-grpc-service
-  namespace: demo
+  namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
   selector:
@@ -24,7 +24,7 @@ spec:
                 path: config.yaml
       containers:
         - name: porter-grpc-service
-          image: ghcr.io/getporter/porter-operator:v1.0.0
+          image: ghcr.io/getporter/porter-grpc-server:v1.0.0
           ports:
             - name: grpc
               containerPort: 3001
